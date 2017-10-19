@@ -90,7 +90,7 @@ n_sims <- 10000
 
 # Computation
 
-First, I will create two data.frames to store my predicted values, y0 and MSEs for each of the 10,000 simulations.
+First, I will create two data frames to store my predicted values, y0 and MSEs for every one of the 10,000 simulations.
 
 ```{r}
 lm_predictions <- data.frame(matrix(0,nrow=n_sims, ncol=3)) 
@@ -100,7 +100,7 @@ spl_predictions <- data.frame(matrix(0,nrow=n_sims, ncol=3))
 colnames(spl_predictions) <- c("fhat", "y0", "MSE")
 ```
 
-Next, I created a for loop, where for each time I generate a new sample of 500 random observations, I will use these observations to train my model. Then, I will use it to teset on the `test_set`, which in this case only contains `x=x0`. I will run this simulation 10,000 times.
+Next, I created a for loop, where for each time I generate a new sample of 500 random observations, I will use this sample as my model's training set. Then, I will test the model on the `test_set`, which in this case only contains `x=x0`. This for loop will run 10,000 times.
 
 ```{r}
 #Generating 10,000 epsilons and corresponding y0
@@ -111,11 +111,11 @@ for (i in 1:n_sims) {
   lm_mod <- smooth.spline(simp$x, simp$y, df=2)
   spl_mod <- smooth.spline(simp$x, simp$y, df=99)
   
-  lm_fit <-predict(lm_mod,test_set)  #fitted values on test set
+  lm_fit <-predict(lm_mod,test_set)  #Predicted values on test set
   spl_fit <- predict(spl_mod, test_set) 
   
   lm_predictions[i, 1] <- lm_fit$y #f(x) hat
-  lm_predictions[i,2] <- f(0.95) + epsilon[i] # y0
+  lm_predictions[i,2] <- f(0.95) + epsilon[i] # y0 = f(x) + epsilon
   lm_predictions[i,3] <- mean((lm_predictions[i,2] - lm_predictions[i,1])^2) #MSE
   
   spl_predictions[i, 1] <- spl_fit$y #f(x) hat
@@ -152,13 +152,17 @@ spl_mse - (spl_bias + spl_var + var(epsilon)) #Very close to 0!
 ```
 
 ## Summary Table
-```{r echo=FALSE}
+```{r include=FALSE}
 #Summary Table
 summary_table <- matrix(c(lm_mse, lm_bias,lm_var,irr,lm_sum, spl_mse, spl_bias, spl_var,irr, spl_sum),nrow = 2, ncol = 5,byrow = TRUE)
 rownames(summary_table) <- c("Linear Model", "Spline Model")
 colnames(summary_table) <- c("MSE", "Squared Bias", "Variance", "Irreducible", "Sum")
-round((summary_table),4)
 ```
+
+| Model        | MSE    | Squared Bias | Variance | Irreducible  | Sum |
+---------------|--------|--------------|----------|------------- |-----|
+Linear Model   | 0.1056 | 0.0139       | 0.0007   | 0.0901       | 0.1047 |
+Spline Model  | 0.1076 | 0.0000       | 0.0181    | 0.0901     | 0.1082 | 
 
 # Analysis
 
@@ -178,8 +182,8 @@ $x$ in this example, and not just for $$\mbox{MSE}\left[\widehat{f}(x_0)\right]
 
 Another way to check my results is by looking into the training and test error of the two models. Low complexity models result in poor accuracy and would lead to high error in both training and test data. On the other hand, high complexity models would have a low training set error but a high test set error.
 
-2. The procedure for calculating the MSE for $$\widehat{f}(x)$$ would be very similar to the above procedure, however the `test_set` would not slightly different. The `test_set` would no longer just contain `x=x0` but will contain the entire domain of x. 
+2. The procedure for calculating the MSE for $$\widehat{f}(x)$$ would be very similar to the above procedure, however the `test_set` would not slightly different. The `test_set` would not longer just contain `x=x0` but will contain the entire domain of x. 
 
-3. I believe that since the error generated from both models are very similar and that the error for the more complex model is bound to have a higher test error, I will follow the Occam's Razor principle and choose the simpler model.
+3. I believe that since the error generated from both models are very similar and that the error for the more complex model is bound to have a higher test error. I will follow the Occam's Razor principle and choose the simpler model.
 
 
